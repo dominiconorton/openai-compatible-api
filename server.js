@@ -13,14 +13,23 @@ app.post('/v1/chat/completions', async (req, res) => {
   try {
     const { model, messages, temperature, max_tokens, top_p, frequency_penalty, presence_penalty } = req.body;
 
+    // Extract the user message content
+    const userMessage = messages.find(message => message.role === 'user');
+
+    if (!userMessage) {
+      return res.status(400).json({ error: 'User message is required' });
+    }
+
     // Construct the request for the Chipp API
     const chippRequest = {
       applicationId: 10731,
       apiKey: 'live_3cb92d90-9558-4b5c-b7b7-822a802daf54',
-      messageList: messages.map(message => ({
-        senderType: message.role.toUpperCase(), // Assuming Chipp API uses uppercase roles
-        content: message.content
-      }))
+      messageList: [
+        {
+          senderType: 'USER',
+          content: userMessage.content
+        }
+      ]
     };
 
     // Send the request to the Chipp API
