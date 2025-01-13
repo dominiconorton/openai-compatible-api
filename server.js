@@ -32,12 +32,18 @@ app.post('/v1/chat/completions', async (req, res) => {
       ]
     };
 
+    // Log the request being sent to the Chipp API
+    console.log('Sending request to Chipp API:', JSON.stringify(chippRequest, null, 2));
+
     // Send the request to the Chipp API
     const chippResponse = await axios.post('https://api.chipp.ai/chat', chippRequest);
 
+    // Log the response from the Chipp API
+    console.log('Received response from Chipp API:', JSON.stringify(chippResponse.data, null, 2));
+
     // Extract the assistant's response from the Chipp API response
     const assistantMessage = chippResponse.data.messageList.find(
-      message => message.senderType.toLowerCase() === 'assistant'
+      message => message.role && message.role.toLowerCase() === 'assistant'
     );
 
     // Translate the Chipp API response to OpenAI format
@@ -51,7 +57,7 @@ app.post('/v1/chat/completions', async (req, res) => {
           index: 0,
           message: {
             role: 'assistant',
-            content: assistantMessage ? assistantMessage.content : ''
+            content: assistantMessage ? assistantMessage.content : 'No response from assistant'
           },
           finish_reason: 'stop'
         }
@@ -67,7 +73,7 @@ app.post('/v1/chat/completions', async (req, res) => {
     res.json(openaiResponse);
 
   } catch (error) {
-    console.error('Error communicating with Chipp API:', error);
+    console.error('Error communicating with Chipp API:', error.response ? error.response.data : error.message);
     res.status(500).json({ error: 'Failed to get response from Chipp API' });
   }
 });
